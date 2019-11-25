@@ -1,9 +1,12 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include <vector>
+#include <iostream>
 #include <map>
+#include <queue>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 using namespace std;
 
@@ -11,17 +14,20 @@ class Clause {
     public:
         Clause(vector<int>& lits);
         ~Clause();
-    private:
-        vector<int> lits; //absolute value of int is the variable name. If value < 0, indicates negation of the variable
+        const vector<int>& getLits();
+        unsigned int size(); //returns number of literals in clause
+        friend ostream& operator<<(ostream& os, const Clause& c);
         unsigned int watched1; //index of first watched literal in lits
         unsigned int watched2;
+    private:
+        const vector<int> lits; //absolute value of int is the variable name. If value < 0, indicates negation of the variable
 };
 
 class VarAssignment {
     public:
         VarAssignment();
         ~VarAssignment();
-    private:
+        void setAssignment(bool tVal, int lvl, int stp, int ant);
         bool truthVal;
         int level; //-1 if not assigned truthVal
         unsigned int step;
@@ -50,7 +56,13 @@ class Vsids : public Decider {
         map<int, float> vsidsMap; //partially ordered decision heuristic scores. Does not necessarily include all literals in f, but only assigned ones
 };
 
+map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f);
+int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>> watchLists, int level, unsigned int& numAssigned);
+int bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>> watchLists, 
+        int& level, int& step, unsigned int& numAssigned);
+void setAssignment(vector<VarAssignment>& a, int var, int truthVal, int level, int step, int antecedent, unsigned int& numAssigned);
+
 //Returns 1 if formula f is satisfiable, 0 otherwise
-int CDCL(vector<Clause>& f);
+vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat);
 
 #endif
