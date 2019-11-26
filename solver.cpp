@@ -151,6 +151,7 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
         int step = 0;
         int guessedLit = vsids.decide(assignment);
         bool truthVal = guessedLit > 0 ? true : false;
+        cout << "Guessed: " << guessedLit << endl;
         setAssignment(assignment, abs(guessedLit), truthVal, level, step, 0, numAssigned);
         ++step;
 
@@ -197,7 +198,7 @@ map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f){
 }
 
 //Determines values for literals in all clauses of size 1, and propagates. Returns -1 if conflict found, 0 otherwise
-int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>> watchLists, int level, unsigned int& numAssigned){
+int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>>& watchLists, int level, unsigned int& numAssigned){
     queue<int> q;
     int step = 0;
     for(unsigned int i = 0; i < f.size(); ++i){
@@ -219,7 +220,7 @@ int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered
 }
 
 //Boolean constant propagation
-tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>> watchLists,
+tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>>& watchLists,
         int& level, int& step, unsigned int& numAssigned){
     while(!q.empty()){
         int propagatedLit = q.front();
@@ -253,7 +254,7 @@ tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, q
                 //get the other watched literal
                 int secondWatchedLit = (lits[f[clauseNum].watched1] == -propagatedLit) ? lits[f[clauseNum].watched2] : lits[f[clauseNum].watched1];
                 int var = abs(secondWatchedLit);
-                int newVal = secondWatchedLit > 0 ? true : false;
+                bool newVal = secondWatchedLit > 0 ? true : false;
                 step++;
                 if(a[var].level >= 0){ //value was previously assigned
                     if(a[var].truthVal != newVal){ //previously assigned value not equal to new truth value
@@ -325,7 +326,7 @@ pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, u
     return make_pair(newLevel, newClause);
 }
 
-unsigned int numLitsAtLvl(vector<int>& lits, int level, const vector<VarAssignment>& a){
+unsigned int numLitsAtLvl(const vector<int>& lits, int level, const vector<VarAssignment>& a){
     unsigned int count = 0;
     for(int lit : lits){
         if(a[abs(lit)].level == level){

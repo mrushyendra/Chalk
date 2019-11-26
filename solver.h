@@ -64,13 +64,13 @@ class Vsids : public Decider {
 };
 
 map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f);
-int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>> watchLists, int level, unsigned int& numAssigned);
-tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>> watchLists,
+int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>>& watchLists, int level, unsigned int& numAssigned);
+tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>>& watchLists,
         int& level, int& step, unsigned int& numAssigned);
 void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, unsigned int antecedent, unsigned int& numAssigned);
 void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigned);
 pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum, int conflictVar);
-unsigned int numLitsAtLvl(vector<int>& lits, int level, const vector<VarAssignment>& a);
+unsigned int numLitsAtLvl(const vector<int>& lits, int level, const vector<VarAssignment>& a);
 void resolve(vector<int>& lits, const vector<int>& lits2, int conflictVar);
 void addToWatchLists(map<int, unordered_set<unsigned int>>& watchLists, Clause& c, unsigned int clauseNum);
 void backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned);
