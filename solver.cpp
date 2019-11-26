@@ -175,7 +175,11 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
     }
 
     sat = 1; //satisfiable
-    return vector<int>(5,0);
+    vector<int> res(assignment.size()-1, 0);
+    for(unsigned int i = 1; i < assignment.size(); ++i){
+        assignment[i].truthVal == true ? res[i-1] = i : res[i-1] = - (int)i;
+    }
+    return res;
 }
 
 map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f){
@@ -284,7 +288,7 @@ void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigne
 pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum, int conflictVar){
     //get max level in conflicting clause
     const vector<int>& lits = f[clauseNum].getLits();
-    auto maxIt = max_element(lits.begin(), lits.end(), [a](const int& litA, const int& litB){return a[abs(litA)].level > a[abs(litB)].level;});
+    auto maxIt = max_element(lits.begin(), lits.end(), [a](const int& litA, const int& litB){return a[abs(litA)].level < a[abs(litB)].level;});
     int clauseLvl = a[abs(*maxIt)].level;
     if(clauseLvl <= 0){
         return make_pair(-1, Clause(vector<int>()));

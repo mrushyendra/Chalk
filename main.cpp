@@ -58,6 +58,14 @@ int main(int argc, char** argv){
 
     int sat = 0;
     vector<int> res = CDCL(f, numVars, sat);
-    cout << sat << endl;
+    if(sat == 1){
+        cout << "sat" << " ";
+        for(int val : res){
+            cout << val << " ";
+        }
+        cout << endl;
+    } else {
+        cout << "unsat" << endl;
+    }
     return sat;
 }

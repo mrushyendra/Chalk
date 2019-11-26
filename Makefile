@@ -1,5 +1,5 @@
 CC=g++
-CPPFLAGS=-std=c++14 -Wall -pedantic
+CPPFLAGS=-std=c++14 -Wall -pedantic -g3
  
 all: solver test
 
