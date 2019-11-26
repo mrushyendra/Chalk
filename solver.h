@@ -59,12 +59,13 @@ class Vsids : public Decider {
         void addToContention(int var);
     private:
         unordered_map<int, float> vsidsScores; //decision heuristic score for each literal in original formula f
-        map<float, int> vsidsMap; //partially ordered decision heuristic scores. Does not necessarily include all literals in f, but only unassigned ones
+        //partially ordered decision heuristic scores. Does not necessarily include all literals in f, but only unassigned ones
+        multimap<float, int> vsidsMap;
 };
 
 map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f);
 int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>> watchLists, int level, unsigned int& numAssigned);
-tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>> watchLists.
+tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>> watchLists,
         int& level, int& step, unsigned int& numAssigned);
 void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, int antecedent, unsigned int& numAssigned);
 void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigned);

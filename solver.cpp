@@ -50,9 +50,9 @@ Vsids::Vsids(vector<Clause>& f): Decider(f) {
         for(int lit : ls){
             vsidsScores[lit]++;
         }
-        for(int lit : ls){
-            vsidsMap[vsidsScores[lit]] = lit; //map from (ordered) scores to literals. Makes finding max score more efficient
-       }
+    }
+    for(auto it = vsidsScores.begin(); it != vsidsScores.end(); ++it){
+        vsidsMap.insert(make_pair(it->second, it->first)); //map from (ordered) scores to literals. Makes finding max score more efficient
     }
 }
 
@@ -62,20 +62,34 @@ void Vsids::stepCounter(){
     this->counter++;
 }
 
+//should only update vsidsMap if already present
 void Vsids::update(Clause& newClause){
     const vector<int>& lits = newClause.getLits();
     for(int lit : lits){
         float oldScore = this->vsidsScores[lit];
         float newScore = oldScore + 1;
         this->vsidsScores[lit] = newScore;
-        this->vsidsMap.erase(oldScore);
-        this->vsidsMap[newScore] = lit;
+
+        //update vsidsMap with new score for lit
+        multimap<float, int>::iterator it = this->vsidsMap.find(oldScore);
+        while(it != this->vsidsMap.end()){
+            if((it->first == oldScore) && (it->second == lit)){
+                it = this->vsidsMap.erase(it);
+                this->vsidsMap.insert(make_pair(newScore, lit));
+                break;
+            } else if (it->first == oldScore){
+                ++it;
+                continue;
+            } else { //gone past 'oldScore' key
+                break;
+            }
+        }
     }
 }
 
 int Vsids::decide(vector<VarAssignment>& a){
     while(!vsidsMap.empty()){
-       map<float, int>::iterator it = --vsidsMap.end(); //get largest score
+       multimap<float, int>::iterator it = --vsidsMap.end(); //get largest score
        int lit = it->second;
        int var = abs(lit);
        vsidsMap.erase(it);
@@ -88,15 +102,33 @@ int Vsids::decide(vector<VarAssignment>& a){
     return 0; //should not occur, since Vsids::decide() is only called when assignment is partial
 }
 
+//not just score (key), but also value needs to be examined
 void Vsids::addToContention(int var){
     int score = this->vsidsScores[var];
-    if(this->vsidsMap.find(score) == vsidsMap.end()){
-        vsidsMap[score] = var;
+    pair<multimap<float, int>::iterator, multimap<float, int>::iterator> ret = this->vsidsMap.equal_range(score);
+    bool found = false;
+    for(auto it = ret.first; it != ret.second; ++it){
+        if(it->second == var){
+            found = true; //no need to re-add score to vsidsMap
+            break;
+        }
     }
+    if(!found){
+        this->vsidsMap.insert(make_pair(score, var));
+    }
+
     //do the same for negation
     score = this->vsidsScores[-var];
-    if(this->vsidsMap.find(score) == vsidsMap.end()){
-        vsidsMap[score] = -var;
+    ret = this->vsidsMap.equal_range(score);
+    found = false;
+    for(auto it = ret.first; it != ret.second; ++it){
+        if(it->second == -var){
+            found = true; //no need to re-add score to vsidsMap
+            break;
+        }
+    }
+    if(!found){
+        this->vsidsMap.insert(make_pair(score, -var));
     }
 }
 
