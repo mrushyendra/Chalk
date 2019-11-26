@@ -58,5 +58,6 @@ int main(int argc, char** argv){
 
     int sat = 0;
     vector<int> res = CDCL(f, numVars, sat);
+    cout << sat << endl;
     return sat;
 }

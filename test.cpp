@@ -80,7 +80,7 @@ void initialCheckTest(vector<Clause>& f, const unsigned int numVars){
     int res = initialCheck(f, assignment, watchLists, level, numAssigned);
     cout << "res: " << res << endl;
 
-    for(int i = 0; i < assignment.size(); ++i){
+    for(unsigned int i = 0; i < assignment.size(); ++i){
         cout << "Is set: " << (assignment[i].level >= 0 ? "True" : "False") << " Var " << i << " value: " << assignment[i].truthVal << endl;
     }
 }
