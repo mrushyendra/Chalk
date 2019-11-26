@@ -9,7 +9,7 @@ w=0
 
 for i in `cat name5`; do
 		python dpll.py ../../bench3/$i > results 2>&1
-		if grep -q "UNSATISFIABLE" results; then
+		if grep -q "unsat" results; then
 		  echo "$i Pass!"
 			let "c+=1"
 			let "s+=1"

@@ -9,7 +9,7 @@ w=0
 
 for i in `cat name3`; do
 		python dpll.py ../../bench2/sat/$i > results 2>&1
-		if (grep -q "[^N]SATISFIABLE" results) || (grep -q "^SATISFIABLE" results); then
+		if (grep -q "[^n]sat" results) || (grep -q "^sat" results); then
 		  echo "$i Pass!"
 			let "c+=1"
 			let "s+=1"
@@ -24,7 +24,7 @@ done
 
 for i in `cat name4`; do
 		python dpll.py ../../bench2/unsat/$i > results 2>&1
-		if grep -q "UNSATISFIABLE" results; then
+		if grep -q "unsat" results; then
 		  echo "$i Pass!"
 			let "c+=1"
 			let "s+=1"

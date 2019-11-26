@@ -8,7 +8,7 @@ VarAssignment::VarAssignment() : truthVal(false), level(-1), step(0), antecedent
 
 VarAssignment::~VarAssignment(){}
 
-void VarAssignment::setAssignment(bool tVal, int lvl, int stp, int ant){
+void VarAssignment::setAssignment(bool tVal, int lvl, int stp, unsigned int ant){
     this->truthVal = tVal;
     this->level = lvl;
     this->step = stp;
@@ -151,7 +151,8 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
         int step = 0;
         int guessedLit = vsids.decide(assignment);
         bool truthVal = guessedLit > 0 ? true : false;
-        setAssignment(assignment, abs(guessedLit), truthVal, level, step, -1, numAssigned);
+        setAssignment(assignment, abs(guessedLit), truthVal, level, step, 0, numAssigned);
+        ++step;
 
         queue<int> q(deque<int>{guessedLit});
         tuple<int, unsigned int, int> conflict; //(isConflict, clause number, conflicting variable) tuple
@@ -270,7 +271,7 @@ tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, q
     return make_tuple(0,0,0);
 }
 
-void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, int antecedent, unsigned int& numAssigned){
+void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, unsigned int antecedent, unsigned int& numAssigned){
     a[var].setAssignment(truthVal, level, step, antecedent);
     numAssigned++;
 }
@@ -300,7 +301,6 @@ pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, u
                 maxStep = a[abs(newLits[i])].step;
             }
         }
-
         unsigned int antecedent = a[lastAssignedVar].antecedent;
         resolve(newLits, f[antecedent].getLits(), conflictVar);
     }

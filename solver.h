@@ -16,7 +16,7 @@ class VarAssignment {
     public:
         VarAssignment();
         ~VarAssignment();
-        void setAssignment(bool tVal, int lvl, int stp, int ant);
+        void setAssignment(bool tVal, int lvl, int stp, unsigned int ant);
         void unsetAssignment();
         bool truthVal;
         int level; //-1 if not assigned truthVal
@@ -67,7 +67,7 @@ map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f);
 int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>> watchLists, int level, unsigned int& numAssigned);
 tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>> watchLists,
         int& level, int& step, unsigned int& numAssigned);
-void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, int antecedent, unsigned int& numAssigned);
+void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, unsigned int antecedent, unsigned int& numAssigned);
 void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigned);
 pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum, int conflictVar);
 unsigned int numLitsAtLvl(vector<int>& lits, int level, const vector<VarAssignment>& a);
