@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <queue>
+#include <set>
 
 //level <0 indicates that variable has not been assigned
 VarAssignment::VarAssignment() : truthVal(false), level(-1), step(0), antecedent(0){}
@@ -17,6 +18,11 @@ void VarAssignment::setAssignment(bool tVal, int lvl, int stp, unsigned int ant)
 
 void VarAssignment:: unsetAssignment(){
     this->level = -1;
+}
+
+ostream& operator<<(ostream& os, const VarAssignment& v){
+    os << "Val: " << v.truthVal << " Lvl: " << v.level << " Step: " << v.step << " Ant: " << v.antecedent << " ";
+    return os;
 }
 
 //For Clauses with <2 literals, the Clause is not added to Watched Literals, so value of watched1 or watched2 is irrelevant
@@ -87,7 +93,7 @@ void Vsids::update(Clause& newClause){
     }
 }
 
-int Vsids::decide(vector<VarAssignment>& a){
+int Vsids::decide(const vector<VarAssignment>& a){
     while(!vsidsMap.empty()){
        multimap<float, int>::iterator it = --vsidsMap.end(); //get largest score
        int lit = it->second;
@@ -138,7 +144,7 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
     int level = 0;
     Vsids vsids(f); //decision heuristic
 
-    //map from variable to set of clauses in which it is watched. Only for clauses with >= 2 literals
+    //map from variable to set of clause numbers in which it is watched. Only for clauses with >= 2 literals
     map<int, unordered_set<unsigned int>> watchLists = initWatchLists(f);
 
     sat = initialCheck(f, assignment, watchLists, level, numAssigned);
@@ -151,15 +157,24 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
         int step = 0;
         int guessedLit = vsids.decide(assignment);
         bool truthVal = guessedLit > 0 ? true : false;
-        cout << "Guessed: " << guessedLit << endl;
+        //cout << "Guessed: " << guessedLit << endl;
         setAssignment(assignment, abs(guessedLit), truthVal, level, step, 0, numAssigned);
         ++step;
 
         queue<int> q(deque<int>{guessedLit});
         tuple<int, unsigned int, int> conflict; //(isConflict, clause number, conflicting variable) tuple
+
+        //cout << "Before: BCP" << endl;
+        int j = 0;
+        for(auto ass : assignment){
+            //cout << j << " " << ass << endl;
+            j++;
+        }
         while(get<0>(conflict = bcp(f, assignment, q, watchLists, level, step, numAssigned)) < 0){
             vsids.stepCounter();
-            pair<int, Clause> newClause = analyzeConflict(f, assignment, get<1>(conflict), get<2>(conflict));
+            pair<int, Clause> newClause = analyzeConflict(f, assignment, get<1>(conflict));
+            //cout << "New Clause: " << newClause.second << endl;
+            //cout << "New Level: " << newClause.first << endl;
             if(newClause.first < 0){
                 sat = -1;
                 return vector<int>();
@@ -167,11 +182,71 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
 
             //by construction, new clause is unit, so we will have to flip its value compared to last guess.
             //If there is another conflict, we will have to move up another level
+            q = queue<int>();
+            int maxStep = backtrack(assignment, vsids, newClause.first, numAssigned);
+            step = maxStep + 1;
+            //step = 1;
+            level = newClause.first;
             f.push_back(newClause.second);
+
+            const vector<int>& lits = newClause.second.getLits();
+            bool watch1Set = false;
+            bool watch2Set = false;
+            //set watch literals for new clause
+            /*for(unsigned int i = 0; i < lits.size(); ++i){
+                unsigned int var = abs(lits[i]);
+                if(assignment[var].level >= 0){
+                    bool isUnsat = lits[i] > 0 ? (assignment[var].truthVal == false) : (assignment[var].truthVal == true);
+                    if(!isUnsat && !watch1Set){
+                        watch1Set = true;
+                        newClause.second.watched1 = i;
+                    } else if(!isUnsat && !watch2Set){
+                        watch2Set = true;
+                        newClause.second.watched2 = i;
+                        break;
+                    }
+                } else {
+                    if(!watch1Set){
+                        watch1Set = true;
+                        newClause.second.watched1 = i;
+                    } else if(!watch2Set){
+                        watch2Set = true;
+                        newClause.second.watched2 = i;
+                        break;
+                    }
+                }
+            }
+            q.push(decisionLit);
+            */
+            for(unsigned int i = 0; i < lits.size(); ++i){
+                unsigned int var = abs(lits[i]);
+                if(assignment[var].level >= 0){
+                    bool isUnsat = lits[i] > 0 ? (assignment[var].truthVal == false) : (assignment[var].truthVal == true);
+                    if(!isUnsat && !watch1Set){
+                        watch1Set = true;
+                        newClause.second.watched1 = i;
+                    } else if(!isUnsat && !watch2Set){
+                        watch2Set = true;
+                        newClause.second.watched2 = i;
+                    }
+                } else {
+                    if(!watch1Set){
+                        watch1Set = true;
+                        newClause.second.watched1 = i;
+                    } else if(!watch2Set){
+                        watch2Set = true;
+                        newClause.second.watched2 = i;
+                    }
+                }
+            }
+            if(watch1Set && !watch2Set){ //new clause would be unit
+                bool newVal = lits[newClause.second.watched1] > 0 ? true : false;
+                setAssignment(assignment, abs(lits[newClause.second.watched1]), newVal, level, step, f.size() - 1, numAssigned);
+                step++;
+                q.push(lits[newClause.second.watched1]);               
+            }
             addToWatchLists(watchLists, newClause.second, f.size()-1);
             vsids.update(newClause.second);
-            backtrack(assignment, vsids, newClause.first, numAssigned);
-            level = newClause.first;
         }
     }
 
@@ -215,7 +290,7 @@ int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered
             }
         }
     }
-
+    step++;
     return get<0>(bcp(f, a, q, watchLists, level, step, numAssigned));
 }
 
@@ -255,13 +330,16 @@ tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, q
                 int secondWatchedLit = (lits[f[clauseNum].watched1] == -propagatedLit) ? lits[f[clauseNum].watched2] : lits[f[clauseNum].watched1];
                 int var = abs(secondWatchedLit);
                 bool newVal = secondWatchedLit > 0 ? true : false;
-                step++;
-                if(a[var].level >= 0){ //value was previously assigned
-                    if(a[var].truthVal != newVal){ //previously assigned value not equal to new truth value
-                        return make_tuple(-1, clauseNum, var);
-                    }
-                } else {
+                if(a[var].level >= 0 && a[var].truthVal != newVal){ //if value was previously assigned and not equal to new truth value
+                    //a[var].step = step; //to ensure this is picked first when analyzing conflict
+                    //a[var].level = level;
+                    //step++;
+                    //cout << "Conflict var: " << var << endl;
+                    return make_tuple(-1, clauseNum, var);
+                } else if(a[var].level < 0){
+                    //cout << "Cl: " << lits << endl;
                     setAssignment(a, var, newVal, level, step, clauseNum, numAssigned);
+                    step++;
                     q.push(secondWatchedLit);
                 }
                 ++it;
@@ -278,15 +356,25 @@ tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, q
 
 void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, unsigned int antecedent, unsigned int& numAssigned){
     a[var].setAssignment(truthVal, level, step, antecedent);
+    //cout << "Setting: " << var << " to: " << a[var] << endl;
     numAssigned++;
 }
 
 void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigned){
+    //cout << "Unset: " << var << " where: " << a[var] << endl;
     a[var].unsetAssignment();
     --numAssigned;
 }
 
-pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum, int conflictVar){
+pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum){
+    //cout << "In analyze conflict: " << endl;
+    int j = 0;
+    for(auto ass : a){
+        //cout << j << " " << ass << endl;
+        j++;
+    }
+ 
+    static int x = 0;
     //get max level in conflicting clause
     const vector<int>& lits = f[clauseNum].getLits();
     auto maxIt = max_element(lits.begin(), lits.end(), [a](const int& litA, const int& litB){return a[abs(litA)].level < a[abs(litB)].level;});
@@ -295,8 +383,14 @@ pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, u
         return make_pair(-1, Clause(vector<int>()));
     }
 
+       //cout << "Conflict clause " << clauseNum << ": " << lits << endl;
+        for(auto it = lits.begin(); it != lits.end(); ++it){
+            //cout << "Lit: " << *it << " " << a[abs(*it)] << endl;
+    }
+
     vector<int> newLits = lits;
     while(numLitsAtLvl(newLits, clauseLvl, a) > 1){
+        x++;
         //get last assigned variable at specified level
         unsigned int maxStep = 0;
         int lastAssignedVar = 0;
@@ -306,8 +400,11 @@ pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, u
                 maxStep = a[abs(newLits[i])].step;
             }
         }
+        //cout << "Last Assigned Var: " << lastAssignedVar << endl;
         unsigned int antecedent = a[lastAssignedVar].antecedent;
-        resolve(newLits, f[antecedent].getLits(), conflictVar);
+        //cout << "Resolving: " << newLits << " and " << f[antecedent].getLits() << endl;
+        resolve(newLits, f[antecedent].getLits(), lastAssignedVar);
+        //cout << "Result: " << newLits << endl;
     }
 
     int largest = 0;
@@ -337,8 +434,8 @@ unsigned int numLitsAtLvl(const vector<int>& lits, int level, const vector<VarAs
 }
 
 void resolve(vector<int>& lits, const vector<int>& lits2, int conflictVar){
-    unordered_set<int> s(lits.begin(), lits.end());
-    unordered_set<int> s2(lits2.begin(), lits2.end());
+    set<int> s(lits.begin(), lits.end());
+    set<int> s2(lits2.begin(), lits2.end());
     s.erase(conflictVar);
     s.erase(-conflictVar);
     s2.erase(conflictVar);
@@ -353,11 +450,51 @@ void addToWatchLists(map<int, unordered_set<unsigned int>>& watchLists, Clause& 
     watchLists[lits[c.watched2]].insert(clauseNum);
 }
 
-void backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned){
+//version that only keeps decision literal
+/* int backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned){
+    int decisionLit = 0;
     for(unsigned int i = 1; i < a.size(); ++i){
         if(a[i].level > newLevel){
             unsetAssignment(a, i, numAssigned);
             vsids.addToContention(i);
+        } else if(a[i].level == newLevel){
+            if(a[i].step == 0){
+                decisionLit = a[i].truthVal == true ? i : -i;
+            } else {
+                unsetAssignment(a, i, numAssigned);
+                vsids.addToContention(i);
+            }
         }
     }
+    cout << "After backtracking: " << endl;
+    int j = 0;
+    for(auto ass : a){
+        cout << j << " " << ass << endl;
+        j++;
+    }
+    return decisionLit;
 }
+*/
+
+/*
+ * version that keeps all propagated vars at that level
+ */
+unsigned int backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned){
+    unsigned int maxStep = 0;
+    for(unsigned int i = 1; i < a.size(); ++i){
+        if(a[i].level > newLevel){
+            unsetAssignment(a, i, numAssigned);
+            vsids.addToContention(i);
+        } else if(a[i].level == newLevel && a[i].step > maxStep){
+            maxStep = a[i].step;
+        }
+    }
+    //cout << "After backtracking: " << endl;
+    int j = 0;
+    for(auto ass : a){
+        //cout << j << " " << ass << endl;
+        j++;
+    }
+    return maxStep;
+}
+

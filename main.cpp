@@ -42,17 +42,22 @@ int main(int argc, char** argv){
     //read in clauses
     vector<Clause> f;
     for(unsigned int i = 0; i < numClauses; ++i){
-        vector<int> lits;
+        unordered_set<int> seen;
         int lit;
         while(true){
             inFile >> lit;
             if(lit == 0){
-                f.emplace_back(lits);
                 break;
             } else {
-                lits.push_back(lit);
+                if(seen.find(-lit) != seen.end()){ //both variable and its negation present in same clause
+                    cout << "unsat" << endl;
+                    return 0;
+                }
+                seen.insert(lit);
             }
         }
+        vector<int> lits(seen.begin(), seen.end());
+        f.emplace_back(lits);
     }
     inFile.close();
 

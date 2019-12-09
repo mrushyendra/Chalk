@@ -18,6 +18,7 @@ class VarAssignment {
         ~VarAssignment();
         void setAssignment(bool tVal, int lvl, int stp, unsigned int ant);
         void unsetAssignment();
+        friend ostream& operator<<(ostream& os, const VarAssignment& v);
         bool truthVal;
         int level; //-1 if not assigned truthVal
         unsigned int step;
@@ -44,7 +45,7 @@ class Decider {
         ~Decider();
         virtual void stepCounter() = 0;
         virtual void update(Clause& newClause) = 0;
-        virtual int decide(vector<VarAssignment>& a) = 0;
+        virtual int decide(const vector<VarAssignment>& a) = 0;
     protected:
        unsigned int counter;
 };
@@ -55,7 +56,7 @@ class Vsids : public Decider {
         ~Vsids();
         void stepCounter();
         void update(Clause& newClause);
-        int decide(vector<VarAssignment>& a);
+        int decide(const vector<VarAssignment>& a);
         void addToContention(int var);
     private:
         unordered_map<int, float> vsidsScores; //decision heuristic score for each literal in original formula f
@@ -69,11 +70,16 @@ tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, q
         int& level, int& step, unsigned int& numAssigned);
 void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, unsigned int antecedent, unsigned int& numAssigned);
 void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigned);
-pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum, int conflictVar);
+pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum);
 unsigned int numLitsAtLvl(const vector<int>& lits, int level, const vector<VarAssignment>& a);
 void resolve(vector<int>& lits, const vector<int>& lits2, int conflictVar);
 void addToWatchLists(map<int, unordered_set<unsigned int>>& watchLists, Clause& c, unsigned int clauseNum);
-void backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned);
+//old: returns max step assigned at the backtracking level
+unsigned int backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned);
+//new: returns decision lit at that level
+//int backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned);
+
+
 
 //Returns 1 if formula f is satisfiable, 0 otherwise
 vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat);
