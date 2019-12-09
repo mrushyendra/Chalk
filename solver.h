@@ -64,24 +64,30 @@ class Vsids : public Decider {
         multimap<float, int> vsidsMap;
 };
 
+//2-Watched literal scheme. Map from literal to list of clause numbers in which it is watched
 map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f);
+
+//Sets truth assignments for all Clauses of size 1, and propagates new assignments
 int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>>& watchLists, int level, unsigned int& numAssigned);
+
+//Boolean Constant Propagation:
+//Given new truth assignments in queue q, looks at all clauses in f to determine all new truth assignments that can be deduced
 tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, queue<int> q, map<int, unordered_set<unsigned int>>& watchLists,
         int& level, int& step, unsigned int& numAssigned);
-void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, unsigned int antecedent, unsigned int& numAssigned);
-void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigned);
+
+//Given a conflicting clause, determines first Unique Implication Point (UIP), returns a clause at that point with the new information learnt
 pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum);
-unsigned int numLitsAtLvl(const vector<int>& lits, int level, const vector<VarAssignment>& a);
+
+//Given formulas 1 -2 3, and 5 2 3, with conflictVar == 2, returns 1 5 3
 void resolve(vector<int>& lits, const vector<int>& lits2, int conflictVar);
+
+//Add watched literals for Clause c to watchLists
 void addToWatchLists(map<int, unordered_set<unsigned int>>& watchLists, Clause& c, unsigned int clauseNum);
-//old: returns max step assigned at the backtracking level
+
+//Returns max step assigned at the backtracking level. Unsets all variables at higher levels
 unsigned int backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned);
-//new: returns decision lit at that level
-//int backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLevel, unsigned int& numAssigned);
 
-
-
-//Returns 1 if formula f is satisfiable, 0 otherwise
-vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat);
+//Returns 1 and a satisfying assignment if formula f is satisfiable, 0 or a negative number otherwise
+pair<int, vector<int>> CDCL(vector<Clause>& f, const unsigned int numVars);
 
 #endif

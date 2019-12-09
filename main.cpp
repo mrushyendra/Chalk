@@ -64,16 +64,14 @@ int main(int argc, char** argv){
     }
     inFile.close();
 
-    int sat = 0;
-    vector<int> res = CDCL(f, numVars, sat);
-    if(sat == 1){
-        cout << "sat" << " ";
-        for(int val : res){
-            cout << val << " ";
+    pair<int, vector<int>> res = CDCL(f, numVars);
+    if(res.first == 1){
+        cout << "sat";
+        for(int val : res.second){
+            cout << " " << val;
         }
-        cout << endl;
     } else {
         cout << "unsat" << endl;
     }
-    return sat;
+    return res.first;
 }
