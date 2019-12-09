@@ -54,7 +54,7 @@ done
 
 for i in `cat name5Fast`; do
 		../../../.././solver ../../bench3/$i > results 2>&1
-		if (grep -q "[^n]sat" results) || (grep -q "^sat" results); then
+		if (grep -q "unsat" results); then
 		  echo "$i Pass!"
 			let "c+=1"
 			let "s+=1"

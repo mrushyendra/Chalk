@@ -39,25 +39,28 @@ int main(int argc, char** argv){
     string t;
     sstream >> t >> t >> numVars >> numClauses;
 
-    //read in clauses
+    //read in clauses and preprocess
     vector<Clause> f;
     for(unsigned int i = 0; i < numClauses; ++i){
         unordered_set<int> seen;
         int lit;
+        bool isSat = false; //unknown
         while(true){
             inFile >> lit;
             if(lit == 0){
                 break;
             } else {
-                if(seen.find(-lit) != seen.end()){ //both variable and its negation present in same clause
-                    cout << "unsat" << endl;
-                    return 0;
+                if(seen.find(-lit) != seen.end()){ //both variable and its negation present in same clause - automatically sat
+                    isSat = true;
+                } else {
+                    seen.insert(lit);
                 }
-                seen.insert(lit);
             }
         }
-        vector<int> lits(seen.begin(), seen.end());
-        f.emplace_back(lits);
+        if(!isSat){
+            vector<int> lits(seen.begin(), seen.end());
+            f.emplace_back(lits);
+        }
     }
     inFile.close();
 

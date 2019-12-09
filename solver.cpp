@@ -157,24 +157,25 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
         int step = 0;
         int guessedLit = vsids.decide(assignment);
         bool truthVal = guessedLit > 0 ? true : false;
-        //cout << "Guessed: " << guessedLit << endl;
+        cout << "Guessed: " << guessedLit << endl;
         setAssignment(assignment, abs(guessedLit), truthVal, level, step, 0, numAssigned);
         ++step;
 
         queue<int> q(deque<int>{guessedLit});
         tuple<int, unsigned int, int> conflict; //(isConflict, clause number, conflicting variable) tuple
 
-        //cout << "Before: BCP" << endl;
+        cout << "Before: BCP" << endl;
         int j = 0;
         for(auto ass : assignment){
-            //cout << j << " " << ass << endl;
+            cout << j << " " << ass << endl;
             j++;
         }
+
         while(get<0>(conflict = bcp(f, assignment, q, watchLists, level, step, numAssigned)) < 0){
             vsids.stepCounter();
             pair<int, Clause> newClause = analyzeConflict(f, assignment, get<1>(conflict));
-            //cout << "New Clause: " << newClause.second << endl;
-            //cout << "New Level: " << newClause.first << endl;
+            cout << "New Clause: " << newClause.second << endl;
+            cout << "New Level: " << newClause.first << endl;
             if(newClause.first < 0){
                 sat = -1;
                 return vector<int>();
@@ -241,6 +242,9 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
             }
             if(watch1Set && !watch2Set){ //new clause would be unit
                 bool newVal = lits[newClause.second.watched1] > 0 ? true : false;
+                if(assignment[abs(lits[newClause.second.watched1])].level >= 0){
+                    unsetAssignment(assignment, abs(lits[newClause.second.watched1]), numAssigned);
+                }
                 setAssignment(assignment, abs(lits[newClause.second.watched1]), newVal, level, step, f.size() - 1, numAssigned);
                 step++;
                 q.push(lits[newClause.second.watched1]);               
@@ -255,6 +259,7 @@ vector<int> CDCL(vector<Clause>& f, const unsigned int numVars, int& sat){
     for(unsigned int i = 1; i < assignment.size(); ++i){
         assignment[i].truthVal == true ? res[i-1] = i : res[i-1] = - (int)i;
     }
+    cout << "numAssigned: " << numAssigned << endl;
     return res;
 }
 
@@ -276,7 +281,9 @@ map<int, unordered_set<unsigned int>> initWatchLists(vector<Clause>& f){
 int initialCheck(vector<Clause>& f, vector<VarAssignment>& a, map<int, unordered_set<unsigned int>>& watchLists, int level, unsigned int& numAssigned){
     queue<int> q;
     int step = 0;
+    cout << "initial check" << endl;
     for(unsigned int i = 0; i < f.size(); ++i){
+        cout << i << " " << f[i].size() << endl;
         if(f[i].size() == 1){
             int lit = f[i].getLits()[0];
             int var = abs(lit);
@@ -334,10 +341,10 @@ tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, q
                     //a[var].step = step; //to ensure this is picked first when analyzing conflict
                     //a[var].level = level;
                     //step++;
-                    //cout << "Conflict var: " << var << endl;
+                    cout << "Conflict var: " << var << endl;
                     return make_tuple(-1, clauseNum, var);
                 } else if(a[var].level < 0){
-                    //cout << "Cl: " << lits << endl;
+                    cout << "Cl: " << lits << endl;
                     setAssignment(a, var, newVal, level, step, clauseNum, numAssigned);
                     step++;
                     q.push(secondWatchedLit);
@@ -356,21 +363,21 @@ tuple<int, unsigned int, int> bcp(vector<Clause>& f, vector<VarAssignment>& a, q
 
 void setAssignment(vector<VarAssignment>& a, int var, bool truthVal, int level, int step, unsigned int antecedent, unsigned int& numAssigned){
     a[var].setAssignment(truthVal, level, step, antecedent);
-    //cout << "Setting: " << var << " to: " << a[var] << endl;
+    cout << "Setting: " << var << " to: " << a[var] << endl;
     numAssigned++;
 }
 
 void unsetAssignment(vector<VarAssignment>& a, int var, unsigned int& numAssigned){
-    //cout << "Unset: " << var << " where: " << a[var] << endl;
+    cout << "Unset: " << var << " where: " << a[var] << endl;
     a[var].unsetAssignment();
     --numAssigned;
 }
 
 pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, unsigned int clauseNum){
-    //cout << "In analyze conflict: " << endl;
+    cout << "In analyze conflict: " << endl;
     int j = 0;
     for(auto ass : a){
-        //cout << j << " " << ass << endl;
+        cout << j << " " << ass << endl;
         j++;
     }
  
@@ -383,9 +390,9 @@ pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, u
         return make_pair(-1, Clause(vector<int>()));
     }
 
-       //cout << "Conflict clause " << clauseNum << ": " << lits << endl;
+       cout << "Conflict clause " << clauseNum << ": " << lits << endl;
         for(auto it = lits.begin(); it != lits.end(); ++it){
-            //cout << "Lit: " << *it << " " << a[abs(*it)] << endl;
+            cout << "Lit: " << *it << " " << a[abs(*it)] << endl;
     }
 
     vector<int> newLits = lits;
@@ -400,11 +407,11 @@ pair<int, Clause> analyzeConflict(vector<Clause>& f, vector<VarAssignment>& a, u
                 maxStep = a[abs(newLits[i])].step;
             }
         }
-        //cout << "Last Assigned Var: " << lastAssignedVar << endl;
+        cout << "Last Assigned Var: " << lastAssignedVar << endl;
         unsigned int antecedent = a[lastAssignedVar].antecedent;
-        //cout << "Resolving: " << newLits << " and " << f[antecedent].getLits() << endl;
+        cout << "Resolving: " << newLits << " and " << f[antecedent].getLits() << endl;
         resolve(newLits, f[antecedent].getLits(), lastAssignedVar);
-        //cout << "Result: " << newLits << endl;
+        cout << "Result: " << newLits << endl;
     }
 
     int largest = 0;
@@ -489,10 +496,10 @@ unsigned int backtrack(vector<VarAssignment>& a, Vsids& vsids, const int newLeve
             maxStep = a[i].step;
         }
     }
-    //cout << "After backtracking: " << endl;
+    cout << "After backtracking: " << endl;
     int j = 0;
     for(auto ass : a){
-        //cout << j << " " << ass << endl;
+        cout << j << " " << ass << endl;
         j++;
     }
     return maxStep;
