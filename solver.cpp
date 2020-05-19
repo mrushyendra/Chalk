@@ -115,7 +115,6 @@ int Vsids::decide(const vector<VarAssignment>& a){
        }
     }
     return 0; // Should not occur, since Vsids::decide() is only called when assignment is partial
-    //TODO: throw exception instead
 }
 
 // Not just score (key), but also value needs to be examined
