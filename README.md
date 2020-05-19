@@ -1,4 +1,4 @@
-## CDCL-SAT
+## Chalk 
 
 ---
 
@@ -10,7 +10,7 @@ Clause Driven Conflict Learning (CDCL) algorithm internally. Uses the
 Variable State Independent Decaying Sum (VSIDS) heuristic to reduce 
 the amount of backtracking.
 
-CDCL-SAT must be fed a file containing CNF boolean formulas in the [DIMACS format](Variable State Independent Decaying Sum).
+Chalk must be fed a file containing CNF boolean formulas in the [DIMACS format](http://www.satcompetition.org/2009/format-benchmarks2009.html).
 For any given formula that is satisfiable, CDCL-SAT outputs 'sat', followed by 
 a whitespace separated list of literals that serve as a satisfiable truth assignment 
 for the variables in the formula. If a given formula is unsatisfiable, it simply
@@ -25,15 +25,19 @@ can be found in this repository.
 #### Setup
 
 To build, run make:
+
     `make`
+
 Or:
+
     `make solver`
 
 ---
 
 #### Run
 
-To run the solver with any [filename] in the DIMACS CNF Format:
+To run the solver with any file in the DIMACS CNF Format:
+
     `./solver filename`
 
 ---
@@ -54,7 +58,7 @@ There are multiple folders in the `benchmarks/benchmarks` folder, including the 
 * bench3: The hardest benchmarks. It only contains five unsat cnf, and 
           does not have a sub-folder.
 
-* groups: =You can build a folder for each group and put their 
+* groups: You can build a folder for each group and put their 
           folders in the 'groups' folder. For example, now we have one
           group, called "group".
 
@@ -89,5 +93,5 @@ run the benchmarks:
 4. Update the corresponding name file, e.g., name1, since the test script
    will read the names from the file
 5. Copy an existing test script, e.g. bench1, and modify the file paths in
-the script to point to your new folder.
+   the script to point to your new folder.
 6. Run the new test script.
