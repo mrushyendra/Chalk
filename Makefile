@@ -9,14 +9,14 @@ solver: main.o solver.o
 test: test.o solver.o
 	$(CC) test.o solver.o -o $@
 
-main.o: main.cpp solver.h
-	$(CC) $(CPPFLAGS) -o main.o -c main.cpp
+main.o: src/main.cpp src/solver.h
+	$(CC) $(CPPFLAGS) -o main.o -c src/main.cpp
 
-test.o: test.cpp solver.h
-	$(CC) $(CPPFLAGS) -o test.o -c test.cpp
+test.o: src/test.cpp src/solver.h
+	$(CC) $(CPPFLAGS) -o test.o -c src/test.cpp
 
-solver.o: solver.cpp solver.h
-	$(CC) $(CPPFLAGS) -o solver.o -c solver.cpp
+solver.o: src/solver.cpp src/solver.h
+	$(CC) $(CPPFLAGS) -o solver.o -c src/solver.cpp
 
 clean:
 	$(RM) solver test *.o 
