@@ -12,7 +12,8 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    //Open file containing boolean formula in simplified version of DIMACS format (http://www.satcompetition.org/2009/format-benchmarks2009.html)
+    // Open file containing boolean formula in simplified version of DIMACS format
+    // (http://www.satcompetition.org/2009/format-benchmarks2009.html)
     ifstream inFile;
     inFile.open(argv[1]);
     if(!inFile){
@@ -20,7 +21,7 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    //skip comments
+    // Skip comments
     string s;
     while(getline(inFile, s, '\n')){
         if(s.size() <= 0){
@@ -39,18 +40,18 @@ int main(int argc, char** argv){
     string t;
     sstream >> t >> t >> numVars >> numClauses;
 
-    //read in clauses and preprocess
-    vector<Clause> f;
+    // Read in clauses and preprocess
+    vector<solver::Clause> f;
     for(unsigned int i = 0; i < numClauses; ++i){
         unordered_set<int> seen;
         int lit;
-        bool isSat = false; //unknown
+        bool isSat = false; // Unknown
         while(true){
             inFile >> lit;
             if(lit == 0){
                 break;
             } else {
-                if(seen.find(-lit) != seen.end()){ //both variable and its negation present in same clause - automatically sat
+                if(seen.find(-lit) != seen.end()){ // Both variable and its negation present in same clause - automatically SAT
                     isSat = true;
                 } else {
                     seen.insert(lit);
@@ -64,7 +65,7 @@ int main(int argc, char** argv){
     }
     inFile.close();
 
-    pair<int, vector<int>> res = CDCL(f, numVars);
+    pair<int, vector<int>> res = solver::CDCL(f, numVars);
     if(res.first == 1){
         cout << "sat";
         for(int val : res.second){

@@ -2,10 +2,13 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include "solver.h"
 
-void initialCheckTest(vector<Clause>& f, const unsigned int numVars);
-void initWatchListsTest(vector<Clause>& f);
+using namespace std;
+
+void initialCheckTest(std::vector<solver::Clause>& f, const unsigned int numVars);
+void initWatchListsTest(vector<solver::Clause>& f);
 
 int main(int argc, char** argv){
     if(argc < 2){
@@ -13,7 +16,8 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    //Open file containing boolean formula in simplified version of DIMACS format (http://www.satcompetition.org/2009/format-benchmarks2009.html)
+    //Open file containing boolean formula in simplified version of DIMACS format 
+    //(http://www.satcompetition.org/2009/format-benchmarks2009.html)
     ifstream inFile;
     inFile.open(argv[1]);
     if(!inFile){
@@ -41,7 +45,7 @@ int main(int argc, char** argv){
     sstream >> t >> t >> numVars >> numClauses;
 
     //read in clauses
-    vector<Clause> f;
+    vector<solver::Clause> f;
     for(unsigned int i = 0; i < numClauses; ++i){
         vector<int> lits;
         int lit;
@@ -62,22 +66,22 @@ int main(int argc, char** argv){
     return 0;
 }
 
-void initWatchListsTest(vector<Clause>& f){
-    map<int, unordered_set<unsigned int>> watchLists = initWatchLists(f);
+void initWatchListsTest(vector<solver::Clause>& f){
+    map<int, unordered_set<unsigned int>> watchLists = solver::initWatchLists(f);
     cout << "Watchlist Test 1: " << (watchLists[-1] == unordered_set<unsigned int>{0, 6, 10, 14, 19, 22}) << endl;
 }
 
 
-void initialCheckTest(vector<Clause>& f, const unsigned int numVars){
-    vector<VarAssignment> assignment(numVars + 1);
+void initialCheckTest(vector<solver::Clause>& f, const unsigned int numVars){
+    vector<solver::VarAssignment> assignment(numVars + 1);
     unsigned int numAssigned = 0; //number of variables that solver has assigned
     unsigned int level = 0;
-    Vsids vsids(f); //decision heuristic
+    solver::Vsids vsids(f); //decision heuristic
 
     //map from variable to set of clauses in which it is watched. Only for clauses with >= 2 literals
-    map<int, unordered_set<unsigned int>> watchLists = initWatchLists(f);
+    map<int, unordered_set<unsigned int>> watchLists = solver::initWatchLists(f);
 
-    int res = initialCheck(f, assignment, watchLists, level, numAssigned);
+    int res = solver::initialCheck(f, assignment, watchLists, level, numAssigned);
     cout << "res: " << res << endl;
 
     for(unsigned int i = 0; i < assignment.size(); ++i){
